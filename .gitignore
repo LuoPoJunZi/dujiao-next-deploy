@@ -1,0 +1,14 @@
+*.log
+*.tmp
+.env
+config.yml
+backup/
+backups/
+data/
+*.tar.gz
+*.sql
+.DS_Store
+dist/
+coverage/
+.idea/
+.vscode/

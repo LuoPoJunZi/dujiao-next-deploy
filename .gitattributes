@@ -1,0 +1,6 @@
+*.sh text eol=lf
+lib/*.sh text eol=lf
+templates/*.tpl text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
