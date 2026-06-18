@@ -160,6 +160,8 @@ Admin domain:
 - Existing Nginx config with the same name is backed up before replacement.
 - Existing deployments are not overwritten in non-interactive mode.
 - Uninstall keeps data by default; `--purge` requires two confirmations and typing the deployment path.
+- Runtime `config/config.yml` is written with `0600` permissions because it contains generated JWT, Redis, and PostgreSQL secrets.
+- Writable mode `0777` is limited to the official bind-mounted data directories (`data/db`, `data/uploads`, `data/logs`, `data/redis`, `data/postgres`) so containers with unknown runtime UIDs can write there. The installer does not recursively chmod existing files.
 
 ## Backup
 
@@ -170,7 +172,9 @@ sudo dujiao-next backup
 
 Backups go to `/opt/dujiao-next/backups` when writable, otherwise `/root/dujiao-next-backups`.
 
-The PostgreSQL profile uses:
+Each backup includes `.env`, `config.yml`, `.deployment-profile`, existing Compose files, and `data/uploads` when present.
+
+The PostgreSQL profile also uses:
 
 ```bash
 docker exec dujiaonext-postgres pg_dump -U ${POSTGRES_USER} -d ${POSTGRES_DB}

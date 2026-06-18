@@ -20,7 +20,7 @@ EOF
 
 while (($# > 0)); do
   case "$1" in
-    --deploy-dir) DEPLOY_DIR="${2:-}"; shift 2 ;;
+    --deploy-dir) DEPLOY_DIR="$(require_arg_value "$1" "${2:-}")"; shift 2 ;;
     --purge) PURGE="yes"; shift ;;
     -h|--help) usage; exit 0 ;;
     *) die "未知参数：$1" ;;
@@ -32,14 +32,15 @@ main() {
   warn "卸载会停止 Dujiao-Next 容器，并备份后移除 Nginx 站点配置。"
   confirm "确认继续卸载？" "no" || die "已取消。"
   if [[ -f "$DEPLOY_DIR/.env" ]]; then
-    compose_run "$DEPLOY_DIR" down || warn "停止容器失败，请手动检查。"
+    compose_run "$DEPLOY_DIR" down
   fi
 
   if [[ -e "$DUJIAO_NGINX_CONF" || -L "$DUJIAO_NGINX_LINK" ]]; then
     backup_existing_file "$DUJIAO_NGINX_CONF"
     rm -f "$DUJIAO_NGINX_LINK"
     rm -f "$DUJIAO_NGINX_CONF"
-    nginx -t && systemctl reload nginx || warn "Nginx reload 失败，请执行 nginx -t 排查。"
+    nginx -t
+    systemctl reload nginx
   fi
 
   if [[ "$PURGE" == "yes" ]]; then
@@ -47,6 +48,8 @@ main() {
     confirm "再次确认删除全部 Dujiao-Next 数据？" "no" || die "已取消删除数据。"
     read -r -p "请输入完整部署目录以确认删除： " typed_dir
     [[ "$typed_dir" == "$DEPLOY_DIR" ]] || die "输入不匹配，已取消删除数据。"
+    [[ "$DEPLOY_DIR" == "$DUJIAO_DEPLOY_DIR_DEFAULT" || "$DEPLOY_DIR" == */dujiao-next ]] || die "拒绝删除非 Dujiao-Next 部署目录：$DEPLOY_DIR"
+    [[ "$DEPLOY_DIR" != "/" && "$DEPLOY_DIR" != "/opt" && "$DEPLOY_DIR" != "/usr" && "$DEPLOY_DIR" != "/var" ]] || die "拒绝删除系统目录：$DEPLOY_DIR"
     rm -rf --one-file-system "$DEPLOY_DIR"
     success "已删除部署目录：$DEPLOY_DIR"
   else

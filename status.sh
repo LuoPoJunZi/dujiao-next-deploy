@@ -10,7 +10,7 @@ DEPLOY_DIR="$DUJIAO_DEPLOY_DIR_DEFAULT"
 
 while (($# > 0)); do
   case "$1" in
-    --deploy-dir) DEPLOY_DIR="${2:-}"; shift 2 ;;
+    --deploy-dir) DEPLOY_DIR="$(require_arg_value "$1" "${2:-}")"; shift 2 ;;
     -h|--help) echo "Usage: sudo ./status.sh [--deploy-dir DIR]"; exit 0 ;;
     *) die "未知参数：$1" ;;
   esac

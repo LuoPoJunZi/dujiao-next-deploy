@@ -25,12 +25,24 @@ Generated values include:
 - `user_jwt.secret`
 
 The `.env` file is written with `0600` permissions.
+The runtime `config/config.yml` file is also written with `0600` permissions because it contains generated JWT secrets and service credentials.
 
 ## Existing Files
 
 Before replacing `/etc/nginx/sites-available/dujiao-next.conf`, the installer creates a timestamped `.bak-YYYYmmdd-HHMMSS` copy.
 
 Existing deployments are detected before installation. Non-interactive installation exits rather than overwriting data.
+The installer treats existing `.env`, Compose files, `config/config.yml`, `data/`, or `backups/` under the deployment directory as an existing deployment.
+
+Only these bind-mounted data directories are made world-writable for container UID compatibility:
+
+- `data/db`
+- `data/uploads`
+- `data/logs`
+- `data/redis`
+- `data/postgres`
+
+The permission change is not recursive, so existing user files are not widened.
 
 ## Dangerous Operations
 

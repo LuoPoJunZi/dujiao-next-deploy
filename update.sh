@@ -22,7 +22,7 @@ EOF
 args=()
 while (($# > 0)); do
   case "$1" in
-    --deploy-dir) DEPLOY_DIR="${2:-}"; shift 2 ;;
+    --deploy-dir) DEPLOY_DIR="$(require_arg_value "$1" "${2:-}")"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) args+=("$1"); shift ;;
   esac

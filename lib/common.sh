@@ -67,6 +67,15 @@ require_cmds() {
   fi
 }
 
+require_arg_value() {
+  local option="$1"
+  local value="${2:-}"
+  if [[ -z "$value" || "$value" == --* ]]; then
+    die "参数 ${option} 需要提供值。"
+  fi
+  printf '%s\n' "$value"
+}
+
 timestamp() {
   date '+%Y%m%d-%H%M%S'
 }
@@ -93,7 +102,7 @@ random_hex() {
     openssl rand -hex "$bytes"
     return
   fi
-  LC_ALL=C tr -dc 'a-f0-9' </dev/urandom | head -c "$((bytes * 2))"
+  od -An -N "$bytes" -tx1 /dev/urandom | tr -d ' \n'
 }
 
 backup_existing_file() {
@@ -115,7 +124,7 @@ safe_mkdir_deploy_tree() {
     "$deploy_dir/data/redis" \
     "$deploy_dir/data/postgres" \
     "$deploy_dir/backups"
-  chmod -R 0777 \
+  chmod 0777 \
     "$deploy_dir/data/logs" \
     "$deploy_dir/data/db" \
     "$deploy_dir/data/uploads" \

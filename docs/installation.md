@@ -10,10 +10,13 @@ The installer asks for:
 
 - Frontend domain
 - Admin domain
-- ACME email if HTTPS is enabled
+- Admin username, default `admin`
+- Deployment directory, default `/opt/dujiao-next`
 - Dujiao-Next image tag
-- Time zone
 - Database profile
+- Whether to request HTTPS
+- ACME email if HTTPS is enabled
+- Whether to handle `ufw` firewall rules
 
 The production default is PostgreSQL + Redis.
 

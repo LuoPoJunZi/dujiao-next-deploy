@@ -41,16 +41,16 @@ EOF
 
 while (($# > 0)); do
   case "$1" in
-    --user-domain) USER_DOMAIN="${2:-}"; shift 2 ;;
-    --admin-domain) ADMIN_DOMAIN="${2:-}"; shift 2 ;;
-    --admin-user) ADMIN_USERNAME="${2:-}"; shift 2 ;;
-    --email) ADMIN_EMAIL="${2:-}"; shift 2 ;;
-    --tag) IMAGE_TAG="${2:-}"; shift 2 ;;
-    --deploy-dir) DEPLOY_DIR="${2:-}"; shift 2 ;;
-    --profile) PROFILE="${2:-}"; shift 2 ;;
+    --user-domain) USER_DOMAIN="$(require_arg_value "$1" "${2:-}")"; shift 2 ;;
+    --admin-domain) ADMIN_DOMAIN="$(require_arg_value "$1" "${2:-}")"; shift 2 ;;
+    --admin-user) ADMIN_USERNAME="$(require_arg_value "$1" "${2:-}")"; shift 2 ;;
+    --email) ADMIN_EMAIL="$(require_arg_value "$1" "${2:-}")"; shift 2 ;;
+    --tag) IMAGE_TAG="$(require_arg_value "$1" "${2:-}")"; shift 2 ;;
+    --deploy-dir) DEPLOY_DIR="$(require_arg_value "$1" "${2:-}")"; shift 2 ;;
+    --profile) PROFILE="$(require_arg_value "$1" "${2:-}")"; shift 2 ;;
     --https) HTTPS_MODE="yes"; shift ;;
     --no-https) HTTPS_MODE="no"; shift ;;
-    --firewall) HANDLE_FIREWALL="${2:-}"; shift 2 ;;
+    --firewall) HANDLE_FIREWALL="$(require_arg_value "$1" "${2:-}")"; shift 2 ;;
     --renew-check) RUN_RENEW_CHECK="yes"; shift ;;
     --yes) ASSUME_YES="yes"; shift ;;
     -h|--help) usage; exit 0 ;;
@@ -107,6 +107,7 @@ validate_inputs() {
   [[ "$USER_DOMAIN" != "$ADMIN_DOMAIN" ]] || die "前台域名和后台域名不能相同。"
   [[ "$PROFILE" == "postgres" || "$PROFILE" == "sqlite" ]] || die "--profile 只支持 postgres 或 sqlite。"
   [[ "$HTTPS_MODE" == "yes" || "$HTTPS_MODE" == "no" ]] || die "HTTPS 选项必须是 yes/no。"
+  [[ "$HANDLE_FIREWALL" == "yes" || "$HANDLE_FIREWALL" == "no" ]] || die "--firewall 只支持 yes 或 no。"
   if [[ "$HTTPS_MODE" == "yes" ]]; then
     [[ -n "$ADMIN_EMAIL" ]] || die "申请 HTTPS 时邮箱不能为空。"
   fi
@@ -228,7 +229,12 @@ preflight() {
 }
 
 handle_existing_deploy() {
-  if [[ ! -e "$DEPLOY_DIR/.env" && ! -e "$DEPLOY_DIR/docker-compose.postgres.yml" && ! -e "$DEPLOY_DIR/docker-compose.sqlite.yml" ]]; then
+  if [[ ! -e "$DEPLOY_DIR/.env" ]] &&
+    [[ ! -e "$DEPLOY_DIR/docker-compose.postgres.yml" ]] &&
+    [[ ! -e "$DEPLOY_DIR/docker-compose.sqlite.yml" ]] &&
+    [[ ! -e "$DEPLOY_DIR/config/config.yml" ]] &&
+    [[ ! -e "$DEPLOY_DIR/data" ]] &&
+    [[ ! -e "$DEPLOY_DIR/backups" ]]; then
     return
   fi
   warn "检测到已有部署目录：$DEPLOY_DIR"
@@ -255,12 +261,23 @@ install_apt_dependencies() {
 
 install_docker() {
   local remove_old="no"
+  local old_packages=()
+  local pkg
   warn "将检查并移除可能冲突的旧 Docker 包：docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc"
   if [[ "$ASSUME_YES" == "yes" ]] || confirm "是否继续处理旧 Docker 包？" "yes"; then
     remove_old="yes"
   fi
   if [[ "$remove_old" == "yes" ]]; then
-    apt-get remove -y docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc || true
+    for pkg in docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc; do
+      if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
+        old_packages+=("$pkg")
+      fi
+    done
+    if ((${#old_packages[@]} > 0)); then
+      apt-get remove -y "${old_packages[@]}"
+    else
+      info "未发现已安装的旧 Docker 冲突包。"
+    fi
   fi
 
   # shellcheck disable=SC1091
@@ -318,7 +335,7 @@ download_and_patch_config() {
   local config_file="$DEPLOY_DIR/config/config.yml"
   local jwt_secret user_jwt_secret
   curl -fsSL "$DUJIAO_CONFIG_URL" -o "$config_file"
-  chmod 0644 "$config_file"
+  chmod 0600 "$config_file"
   load_env_file "$DEPLOY_DIR/.env"
   jwt_secret="$(random_hex 32)"
   user_jwt_secret="$(random_hex 32)"

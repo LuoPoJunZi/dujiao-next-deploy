@@ -24,6 +24,7 @@ sudo dujiao-next upgrade v1.2.3
 ```
 
 This updates `TAG` in `/opt/dujiao-next/.env`, pulls images, recreates containers, and runs health checks.
+The updater creates a backup before changing `TAG` or pulling new images.
 
 ## Backup
 
@@ -37,12 +38,12 @@ For PostgreSQL deployments, the backup includes:
 
 - `.env`
 - `config/config.yml`
+- `.deployment-profile`
+- Docker Compose files
 - uploaded files
-- logs
-- Redis data directory
 - PostgreSQL dump created with `pg_dump`
 
-For SQLite deployments, the backup includes `data/db`.
+For SQLite deployments, the backup includes `data/db` instead of a PostgreSQL dump.
 
 ## Restore
 

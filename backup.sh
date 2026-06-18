@@ -16,7 +16,7 @@ EOF
 
 while (($# > 0)); do
   case "$1" in
-    --deploy-dir) DEPLOY_DIR="${2:-}"; shift 2 ;;
+    --deploy-dir) DEPLOY_DIR="$(require_arg_value "$1" "${2:-}")"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) die "未知参数：$1" ;;
   esac
@@ -28,7 +28,7 @@ main() {
   [[ -d "$DEPLOY_DIR" ]] || die "部署目录不存在：$DEPLOY_DIR"
   [[ -f "$DEPLOY_DIR/.env" ]] || die "找不到 $DEPLOY_DIR/.env"
   load_env_file "$DEPLOY_DIR/.env"
-  local backup_root backup_name tmp_dir profile compose_file
+  local backup_root backup_name tmp_dir profile compose_file compose_candidate
   if [[ -d "$DEPLOY_DIR/backups" && -w "$DEPLOY_DIR/backups" ]]; then
     backup_root="$DEPLOY_DIR/backups"
   else
@@ -44,7 +44,17 @@ main() {
 
   cp -a "$DEPLOY_DIR/.env" "$tmp_dir/$backup_name/.env"
   cp -a "$DEPLOY_DIR/config/config.yml" "$tmp_dir/$backup_name/config.yml"
-  cp -a "$DEPLOY_DIR/$compose_file" "$tmp_dir/$backup_name/$compose_file"
+  if [[ -f "$DEPLOY_DIR/.deployment-profile" ]]; then
+    cp -a "$DEPLOY_DIR/.deployment-profile" "$tmp_dir/$backup_name/.deployment-profile"
+  else
+    printf '%s\n' "$profile" >"$tmp_dir/$backup_name/.deployment-profile"
+  fi
+  for compose_candidate in docker-compose.postgres.yml docker-compose.sqlite.yml; do
+    if [[ -f "$DEPLOY_DIR/$compose_candidate" ]]; then
+      cp -a "$DEPLOY_DIR/$compose_candidate" "$tmp_dir/$backup_name/$compose_candidate"
+    fi
+  done
+  [[ -f "$tmp_dir/$backup_name/$compose_file" ]] || die "找不到当前部署使用的 Compose 文件：$DEPLOY_DIR/$compose_file"
   if [[ -d "$DEPLOY_DIR/data/uploads" ]]; then
     mkdir -p "$tmp_dir/$backup_name/data"
     cp -a "$DEPLOY_DIR/data/uploads" "$tmp_dir/$backup_name/data/uploads"
