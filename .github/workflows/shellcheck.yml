@@ -19,4 +19,4 @@ jobs:
         run: bash -n *.sh lib/*.sh
 
       - name: Run shellcheck
-        run: shellcheck *.sh lib/*.sh
+        run: shellcheck -x *.sh lib/*.sh
