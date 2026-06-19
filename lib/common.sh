@@ -108,7 +108,8 @@ random_hex() {
 backup_existing_file() {
   local path="$1"
   if [[ -e "$path" || -L "$path" ]]; then
-    local backup="${path}.bak-$(timestamp)"
+    local backup
+    backup="${path}.bak-$(timestamp)"
     cp -a "$path" "$backup"
     warn "已备份已有文件：$path -> $backup"
   fi

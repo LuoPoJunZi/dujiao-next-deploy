@@ -35,7 +35,7 @@ restore_help() {
 建议流程：
   1. sudo dujiao-next backup
   2. tar -tzf <backup-file>.tar.gz
-  3. 停止服务：cd $DEPLOY_DIR && docker compose --env-file .env -f $(compose_profile_file "$DEPLOY_DIR") down
+  3. 停止服务：cd "$DEPLOY_DIR" && docker compose --env-file .env -f $(compose_profile_file "$DEPLOY_DIR") down
   4. 还原 .env、config.yml、data/uploads
   5. PostgreSQL 使用备份中的 postgres.sql 经 psql 导入
   6. 启动服务并检查：sudo dujiao-next status
