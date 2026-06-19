@@ -66,6 +66,7 @@ The installer asks for:
 - Whether to request HTTPS
 - Certbot email
 - Whether to handle `ufw` firewall rules
+- Whether to remove old Docker conflict packages
 
 The admin password is generated with `openssl rand` and printed once at the end of installation. Save it immediately and change it after first login.
 
@@ -82,6 +83,7 @@ The admin password is generated with `openssl rand` and printed once at the end 
 --https
 --no-https
 --firewall yes|no
+--remove-old-docker yes|no
 --renew-check
 --yes
 ```

@@ -17,6 +17,7 @@ The installer asks for:
 - Whether to request HTTPS
 - ACME email if HTTPS is enabled
 - Whether to handle `ufw` firewall rules
+- Whether to remove old Docker conflict packages
 
 The production default is PostgreSQL + Redis.
 

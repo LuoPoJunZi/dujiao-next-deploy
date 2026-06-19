@@ -28,6 +28,8 @@ main() {
   [[ -d "$DEPLOY_DIR" ]] || die "部署目录不存在：$DEPLOY_DIR"
   [[ -f "$DEPLOY_DIR/.env" ]] || die "找不到 $DEPLOY_DIR/.env"
   load_env_file "$DEPLOY_DIR/.env"
+  : "${POSTGRES_USER:?缺少 POSTGRES_USER}"
+  : "${POSTGRES_DB:?缺少 POSTGRES_DB}"
   local backup_root backup_name tmp_dir profile compose_file compose_candidate
   if [[ -d "$DEPLOY_DIR/backups" && -w "$DEPLOY_DIR/backups" ]]; then
     backup_root="$DEPLOY_DIR/backups"

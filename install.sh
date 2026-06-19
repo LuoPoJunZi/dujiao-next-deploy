@@ -15,6 +15,7 @@ DEPLOY_DIR="$DUJIAO_DEPLOY_DIR_DEFAULT"
 PROFILE="postgres"
 HTTPS_MODE=""
 HANDLE_FIREWALL=""
+REMOVE_OLD_DOCKER_PACKAGES=""
 ASSUME_YES="no"
 RUN_RENEW_CHECK="no"
 
@@ -33,6 +34,7 @@ Options:
   --https                    Request HTTPS certificate
   --no-https                 Skip HTTPS certificate
   --firewall yes|no          Allow 80/443 with ufw when ufw exists
+  --remove-old-docker yes|no Remove installed Docker conflict packages, default: yes
   --renew-check              Run certbot renew --dry-run after issuance
   --yes                      Non-interactive mode
   -h, --help                 Show help
@@ -51,6 +53,7 @@ while (($# > 0)); do
     --https) HTTPS_MODE="yes"; shift ;;
     --no-https) HTTPS_MODE="no"; shift ;;
     --firewall) HANDLE_FIREWALL="$(require_arg_value "$1" "${2:-}")"; shift 2 ;;
+    --remove-old-docker) REMOVE_OLD_DOCKER_PACKAGES="$(require_arg_value "$1" "${2:-}")"; shift 2 ;;
     --renew-check) RUN_RENEW_CHECK="yes"; shift ;;
     --yes) ASSUME_YES="yes"; shift ;;
     -h|--help) usage; exit 0 ;;
@@ -65,6 +68,7 @@ prompt_if_needed() {
     [[ "$HTTPS_MODE" != "yes" || -n "$ADMIN_EMAIL" ]] || die "启用 --https 时必须提供 --email。"
     HTTPS_MODE="${HTTPS_MODE:-no}"
     HANDLE_FIREWALL="${HANDLE_FIREWALL:-no}"
+    REMOVE_OLD_DOCKER_PACKAGES="${REMOVE_OLD_DOCKER_PACKAGES:-yes}"
     return
   fi
 
@@ -99,6 +103,13 @@ prompt_if_needed() {
       HANDLE_FIREWALL="no"
     fi
   fi
+  if [[ -z "$REMOVE_OLD_DOCKER_PACKAGES" ]]; then
+    if confirm "是否允许安装器移除旧 Docker 冲突包？" "yes"; then
+      REMOVE_OLD_DOCKER_PACKAGES="yes"
+    else
+      REMOVE_OLD_DOCKER_PACKAGES="no"
+    fi
+  fi
 }
 
 validate_inputs() {
@@ -108,6 +119,7 @@ validate_inputs() {
   [[ "$PROFILE" == "postgres" || "$PROFILE" == "sqlite" ]] || die "--profile 只支持 postgres 或 sqlite。"
   [[ "$HTTPS_MODE" == "yes" || "$HTTPS_MODE" == "no" ]] || die "HTTPS 选项必须是 yes/no。"
   [[ "$HANDLE_FIREWALL" == "yes" || "$HANDLE_FIREWALL" == "no" ]] || die "--firewall 只支持 yes 或 no。"
+  [[ "$REMOVE_OLD_DOCKER_PACKAGES" == "yes" || "$REMOVE_OLD_DOCKER_PACKAGES" == "no" ]] || die "--remove-old-docker 只支持 yes 或 no。"
   if [[ "$HTTPS_MODE" == "yes" ]]; then
     [[ -n "$ADMIN_EMAIL" ]] || die "申请 HTTPS 时邮箱不能为空。"
   fi
@@ -260,14 +272,10 @@ install_apt_dependencies() {
 }
 
 install_docker() {
-  local remove_old="no"
   local old_packages=()
   local pkg
-  warn "将检查并移除可能冲突的旧 Docker 包：docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc"
-  if [[ "$ASSUME_YES" == "yes" ]] || confirm "是否继续处理旧 Docker 包？" "yes"; then
-    remove_old="yes"
-  fi
-  if [[ "$remove_old" == "yes" ]]; then
+  info "检查可能冲突的旧 Docker 包：docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc"
+  if [[ "$REMOVE_OLD_DOCKER_PACKAGES" == "yes" ]]; then
     for pkg in docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc; do
       if dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
         old_packages+=("$pkg")
@@ -278,6 +286,8 @@ install_docker() {
     else
       info "未发现已安装的旧 Docker 冲突包。"
     fi
+  else
+    warn "已按用户选择跳过旧 Docker 冲突包移除；如 Docker 安装失败，请手动处理冲突包后重试。"
   fi
 
   # shellcheck disable=SC1091
