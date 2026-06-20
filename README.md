@@ -65,8 +65,10 @@ The installer asks for:
 - Deployment directory, default `/opt/dujiao-next`
 - Whether to request HTTPS
 - Certbot email
-- Whether to handle `ufw` firewall rules
+- Whether to handle host firewall rules
 - Whether to remove old Docker conflict packages
+
+Before changing the system, the installer prints a summary and asks for one final confirmation in interactive mode.
 
 The admin password is generated with `openssl rand` and printed once at the end of installation. Save it immediately and change it after first login.
 
@@ -97,6 +99,7 @@ Repository:
 ├── install.sh
 ├── update.sh
 ├── backup.sh
+├── check-updates.sh
 ├── status.sh
 ├── uninstall.sh
 ├── menu.sh
@@ -192,12 +195,22 @@ sudo dujiao-next upgrade v1.2.3
 
 Without a tag, the updater fetches the latest GitHub release and falls back to `latest`.
 
+## Version Check
+
+```bash
+./check-updates.sh
+sudo dujiao-next check-updates
+```
+
+The checker compares the deployed `TAG` with the latest GitHub release and prints the upgrade command when a newer tag is available.
+
 ## Status And Logs
 
 ```bash
 sudo ./status.sh
 sudo dujiao-next status
 sudo dujiao-next logs api
+sudo dujiao-next check-updates
 sudo dujiao-next restore-help
 ```
 

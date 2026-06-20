@@ -26,6 +26,12 @@ sudo dujiao-next upgrade v1.2.3
 This updates `TAG` in `/opt/dujiao-next/.env`, pulls images, recreates containers, and runs health checks.
 The updater creates a backup before changing `TAG` or pulling new images.
 
+Check the latest release without upgrading:
+
+```bash
+sudo dujiao-next check-updates
+```
+
 ## Backup
 
 ```bash

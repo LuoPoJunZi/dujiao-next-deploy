@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Added `check-updates.sh` and menu integration for release checks.
+- Added validation for domain names, image tags, and Certbot email input.
+- Extended optional firewall handling to firewalld and added explicit nftables/iptables guidance.
+
 ## 0.1.0 - 2026-06-18
 
 - Initial open source project scaffold.

@@ -18,8 +18,9 @@ Dujiao-Next 管理菜单
 4) 查看状态
 5) 查看日志
 6) 重启服务
-7) 恢复提示
-8) 卸载
+7) 检查更新
+8) 恢复提示
+9) 卸载
 0) 退出
 EOF
 }
@@ -63,6 +64,7 @@ dispatch_command() {
     install) "$SCRIPT_DIR/install.sh" "$@" ;;
     update|upgrade) "$SCRIPT_DIR/update.sh" "$@" ;;
     backup) "$SCRIPT_DIR/backup.sh" "$@" ;;
+    check-updates|version) "$SCRIPT_DIR/check-updates.sh" "$@" ;;
     status) "$SCRIPT_DIR/status.sh" "$@" ;;
     logs) show_logs "${1:-}" ;;
     restart) restart_services ;;
@@ -70,7 +72,7 @@ dispatch_command() {
     uninstall) "$SCRIPT_DIR/uninstall.sh" "$@" ;;
     menu) interactive_menu ;;
     -h|--help)
-      log "Usage: sudo dujiao-next [install|upgrade|backup|status|logs|restart|restore-help|uninstall]"
+      log "Usage: sudo dujiao-next [install|upgrade|backup|check-updates|status|logs|restart|restore-help|uninstall]"
       ;;
     *) die "未知命令：$cmd" ;;
   esac
@@ -88,8 +90,9 @@ interactive_menu() {
       4) "$SCRIPT_DIR/status.sh" ;;
       5) show_logs ;;
       6) restart_services ;;
-      7) restore_help ;;
-      8) "$SCRIPT_DIR/uninstall.sh" ;;
+      7) "$SCRIPT_DIR/check-updates.sh" ;;
+      8) restore_help ;;
+      9) "$SCRIPT_DIR/uninstall.sh" ;;
       0) exit 0 ;;
       *) warn "无效选择。" ;;
     esac

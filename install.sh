@@ -33,7 +33,7 @@ Options:
   --profile postgres|sqlite  Deployment profile, default: postgres
   --https                    Request HTTPS certificate
   --no-https                 Skip HTTPS certificate
-  --firewall yes|no          Allow 80/443 with ufw when ufw exists
+  --firewall yes|no          Allow 22/80/443 with supported host firewalls
   --remove-old-docker yes|no Remove installed Docker conflict packages, default: yes
   --renew-check              Run certbot renew --dry-run after issuance
   --yes                      Non-interactive mode
@@ -115,14 +115,36 @@ prompt_if_needed() {
 validate_inputs() {
   [[ -n "$USER_DOMAIN" ]] || die "前台域名不能为空。"
   [[ -n "$ADMIN_DOMAIN" ]] || die "后台域名不能为空。"
+  is_valid_domain "$USER_DOMAIN" || die "前台域名格式不合法：$USER_DOMAIN"
+  is_valid_domain "$ADMIN_DOMAIN" || die "后台域名格式不合法：$ADMIN_DOMAIN"
   [[ "$USER_DOMAIN" != "$ADMIN_DOMAIN" ]] || die "前台域名和后台域名不能相同。"
+  if [[ -n "$IMAGE_TAG" ]]; then
+    is_valid_tag "$IMAGE_TAG" || die "镜像 TAG 格式不合法：$IMAGE_TAG"
+    ! tag_looks_like_domain "$IMAGE_TAG" || die "镜像 TAG 看起来像域名，请填写版本号，例如 latest 或 v1.2.3。"
+  fi
   [[ "$PROFILE" == "postgres" || "$PROFILE" == "sqlite" ]] || die "--profile 只支持 postgres 或 sqlite。"
   [[ "$HTTPS_MODE" == "yes" || "$HTTPS_MODE" == "no" ]] || die "HTTPS 选项必须是 yes/no。"
   [[ "$HANDLE_FIREWALL" == "yes" || "$HANDLE_FIREWALL" == "no" ]] || die "--firewall 只支持 yes 或 no。"
   [[ "$REMOVE_OLD_DOCKER_PACKAGES" == "yes" || "$REMOVE_OLD_DOCKER_PACKAGES" == "no" ]] || die "--remove-old-docker 只支持 yes 或 no。"
   if [[ "$HTTPS_MODE" == "yes" ]]; then
     [[ -n "$ADMIN_EMAIL" ]] || die "申请 HTTPS 时邮箱不能为空。"
+    is_valid_email "$ADMIN_EMAIL" || die "Certbot 邮箱格式不合法：$ADMIN_EMAIL"
   fi
+}
+
+confirm_install_plan() {
+  [[ "$ASSUME_YES" == "yes" ]] && return
+  log "安装配置确认："
+  log "  前台域名：$USER_DOMAIN"
+  log "  后台域名：$ADMIN_DOMAIN"
+  log "  管理员用户名：$ADMIN_USERNAME"
+  log "  镜像 TAG：$IMAGE_TAG"
+  log "  部署方案：$PROFILE"
+  log "  部署目录：$DEPLOY_DIR"
+  log "  HTTPS：$HTTPS_MODE"
+  log "  防火墙处理：$HANDLE_FIREWALL"
+  log "  移除旧 Docker 冲突包：$REMOVE_OLD_DOCKER_PACKAGES"
+  confirm "以上配置是否正确，继续安装？" "yes" || die "已取消，请重新运行并修正输入。"
 }
 
 detect_os() {
@@ -419,13 +441,42 @@ write_nginx_config() {
 
 handle_firewall() {
   [[ "$HANDLE_FIREWALL" == "yes" ]] || return
-  if ! has_cmd ufw; then
-    warn "未安装 ufw，跳过防火墙处理。"
+  if has_cmd ufw; then
+    ufw allow 22/tcp
+    ufw allow 80/tcp
+    ufw allow 443/tcp
+    if ufw status 2>/dev/null | grep -q "Status: active"; then
+      ufw reload
+    fi
+    success "已通过 ufw 放行 22/80/443。"
+    warn "仍需确认云厂商安全组或云防火墙已放行 80/443。"
     return
   fi
-  ufw allow 80/tcp
-  ufw allow 443/tcp
-  success "已通过 ufw 放行 80/443。"
+
+  if has_cmd firewall-cmd; then
+    firewall-cmd --permanent --add-service=ssh
+    firewall-cmd --permanent --add-service=http
+    firewall-cmd --permanent --add-service=https
+    if systemctl is-active --quiet firewalld; then
+      firewall-cmd --reload
+    fi
+    success "已通过 firewalld 放行 ssh/http/https。"
+    warn "仍需确认云厂商安全组或云防火墙已放行 80/443。"
+    return
+  fi
+
+  if has_cmd nft && systemctl is-active --quiet nftables; then
+    warn "检测到 nftables 正在运行，脚本不会自动改写现有规则。请手动放行 22/80/443。"
+    warn "示例：sudo nft add rule inet filter input tcp dport {22,80,443} accept"
+    return
+  fi
+
+  if has_cmd iptables; then
+    warn "检测到 iptables 环境，脚本不会自动改写现有规则，以免影响已有策略。请手动放行 22/80/443。"
+    return
+  fi
+
+  warn "未检测到 ufw/firewalld/nftables/iptables，请自行确认本机和云防火墙已放行 80/443。"
 }
 
 request_https() {
@@ -456,7 +507,7 @@ start_services() {
 install_cli_runtime() {
   local root="$1"
   install -d -m 0755 "$DUJIAO_RUNTIME_DIR"
-  cp -a "$root/install.sh" "$root/update.sh" "$root/backup.sh" "$root/status.sh" "$root/uninstall.sh" "$root/menu.sh" "$DUJIAO_RUNTIME_DIR/"
+  cp -a "$root/install.sh" "$root/update.sh" "$root/backup.sh" "$root/status.sh" "$root/uninstall.sh" "$root/menu.sh" "$root/check-updates.sh" "$DUJIAO_RUNTIME_DIR/"
   cp -a "$root/lib" "$root/templates" "$DUJIAO_RUNTIME_DIR/"
   chmod +x "$DUJIAO_RUNTIME_DIR/"*.sh
   ln -sf "$DUJIAO_RUNTIME_DIR/menu.sh" "$DUJIAO_MENU_BIN"
@@ -467,6 +518,8 @@ main() {
   prompt_if_needed
   validate_inputs
   [[ -n "$IMAGE_TAG" ]] || IMAGE_TAG="$(get_latest_tag)"
+  is_valid_tag "$IMAGE_TAG" || die "自动获取到的镜像 TAG 格式不合法：$IMAGE_TAG"
+  confirm_install_plan
   preflight
   handle_existing_deploy
   local root

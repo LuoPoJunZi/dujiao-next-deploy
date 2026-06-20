@@ -12,6 +12,11 @@ Dujiao-Next containers bind only to loopback:
 
 Redis and PostgreSQL do not define `ports`, so Docker does not publish them to the host network.
 
+## Host Firewall
+
+When requested, the installer can add allow rules for `22`, `80`, and `443` on `ufw`, or `ssh`, `http`, and `https` services on `firewalld`.
+For active `nftables` or existing `iptables` environments, it prints manual guidance instead of rewriting existing policies.
+
 ## Secrets
 
 The installer generates secrets with `openssl rand`. If OpenSSL is unavailable in a later helper context, `/dev/urandom` is used.

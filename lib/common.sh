@@ -76,6 +76,28 @@ require_arg_value() {
   printf '%s\n' "$value"
 }
 
+is_valid_domain() {
+  local domain="$1"
+  [[ ${#domain} -le 253 ]] || return 1
+  [[ "$domain" != *..* ]] || return 1
+  [[ "$domain" =~ ^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$ ]]
+}
+
+is_valid_email() {
+  local email="$1"
+  [[ "$email" =~ ^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$ ]]
+}
+
+is_valid_tag() {
+  local tag="$1"
+  [[ "$tag" =~ ^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$ ]]
+}
+
+tag_looks_like_domain() {
+  local tag="$1"
+  is_valid_domain "$tag"
+}
+
 timestamp() {
   date '+%Y%m%d-%H%M%S'
 }

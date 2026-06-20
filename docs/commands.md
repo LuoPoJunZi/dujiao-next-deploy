@@ -45,6 +45,14 @@ sudo ./update.sh v1.2.3
 sudo dujiao-next upgrade v1.2.3
 ```
 
+## Version Check
+
+```bash
+./check-updates.sh
+sudo dujiao-next check-updates
+sudo dujiao-next version
+```
+
 ## Backup
 
 ```bash
