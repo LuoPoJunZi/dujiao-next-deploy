@@ -1,19 +1,21 @@
 # dujiao-next-deploy
 
-`dujiao-next-deploy` is an unofficial Bash deployment toolkit for Dujiao-Next on Ubuntu/Debian servers.
+中文 | [English](README.en.md)
 
-It installs Docker Engine, Docker Compose, Nginx and optional Certbot HTTPS, then deploys Dujiao-Next with a production PostgreSQL + Redis profile by default.
+`dujiao-next-deploy` 是一个非官方的 Dujiao-Next Bash 一键部署工具，适用于 Ubuntu / Debian 服务器。
 
-This project is not an official Dujiao-Next project. Dujiao-Next belongs to its original authors and maintainers.
+它会安装 Docker Engine、Docker Compose、Nginx，并可选申请 Certbot HTTPS 证书；默认使用 PostgreSQL + Redis 生产方案部署 Dujiao-Next。
 
-## Supported Systems
+本项目不是 Dujiao-Next 官方项目。Dujiao-Next 的版权归原项目作者和维护者所有。
+
+## 支持系统
 
 - Ubuntu 22.04+
 - Debian 12+
 
-Run as `root` or with `sudo`.
+请使用 `root` 或 `sudo` 运行安装、升级、备份和卸载脚本。
 
-## Quick Start
+## 快速开始
 
 ```bash
 git clone https://github.com/<USER>/dujiao-next-deploy.git
@@ -21,13 +23,15 @@ cd dujiao-next-deploy
 sudo ./install.sh
 ```
 
-After installation:
+安装完成后，可以使用管理入口：
 
 ```bash
 sudo dujiao-next
 ```
 
-## One-command Install
+## 一行安装
+
+启用 HTTPS：
 
 ```bash
 sudo ./install.sh \
@@ -39,7 +43,7 @@ sudo ./install.sh \
   --https
 ```
 
-Skip HTTPS:
+跳过 HTTPS：
 
 ```bash
 sudo ./install.sh \
@@ -50,29 +54,32 @@ sudo ./install.sh \
   --no-https
 ```
 
-## Interactive Install
+## 交互安装
 
 ```bash
 sudo ./install.sh
 ```
 
-The installer asks for:
+安装脚本会先集中收集信息，然后再自动执行部署流程。
 
-- Frontend domain
-- Admin domain
-- Admin username, default `admin`
-- Image tag, default GitHub latest release; fallback `latest`
-- Deployment directory, default `/opt/dujiao-next`
-- Whether to request HTTPS
-- Certbot email
-- Whether to handle host firewall rules
-- Whether to remove old Docker conflict packages
+安装脚本会询问：
 
-Before changing the system, the installer prints a summary and asks for one final confirmation in interactive mode.
+- 前台域名
+- 后台域名
+- 管理员用户名，默认 `admin`
+- 镜像 TAG，默认 GitHub latest release，失败回退 `latest`
+- 部署目录，默认 `/opt/dujiao-next`
+- 部署方案 `postgres|sqlite`
+- 是否申请 HTTPS
+- Certbot 邮箱
+- 是否处理主机防火墙规则
+- 是否移除旧 Docker 冲突包
 
-The admin password is generated with `openssl rand` and printed once at the end of installation. Save it immediately and change it after first login.
+在修改系统前，交互模式会打印配置汇总并进行最终确认。
 
-## Non-interactive Options
+初始管理员密码会自动生成，只在安装结束时打印一次。请立即保存并在首次登录后修改。
+
+## 非交互参数
 
 ```text
 --user-domain DOMAIN
@@ -90,9 +97,9 @@ The admin password is generated with `openssl rand` and printed once at the end 
 --yes
 ```
 
-## Directory Structure
+## 目录结构
 
-Repository:
+仓库结构：
 
 ```text
 .
@@ -109,7 +116,7 @@ Repository:
 └── .github/workflows/shellcheck.yml
 ```
 
-Server deployment:
+服务器部署目录：
 
 ```text
 /opt/dujiao-next
@@ -125,26 +132,26 @@ Server deployment:
 └── .env
 ```
 
-## Ports
+## 端口
 
-Public:
+公网入口：
 
 - Nginx: `80`, `443`
 
-Loopback only:
+仅绑定本机回环地址：
 
 - API: `127.0.0.1:8080:8080`
-- User frontend: `127.0.0.1:8081:80`
-- Admin frontend: `127.0.0.1:8082:80`
+- 前台 User: `127.0.0.1:8081:80`
+- 后台 Admin: `127.0.0.1:8082:80`
 
-Not published:
+不发布到宿主机：
 
 - Redis `6379`
 - PostgreSQL `5432`
 
-## Nginx Routing
+## Nginx 路由
 
-Frontend domain:
+前台域名：
 
 - `/` -> `http://127.0.0.1:8081`
 - `/api/` -> `http://127.0.0.1:8080/api/`
@@ -152,40 +159,40 @@ Frontend domain:
 - `/sitemap.xml` -> `http://127.0.0.1:8080/sitemap.xml`
 - `/robots.txt` -> `http://127.0.0.1:8080/robots.txt`
 
-Admin domain:
+后台域名：
 
 - `/` -> `http://127.0.0.1:8082`
 - `/api/` -> `http://127.0.0.1:8080/api/`
 - `/uploads/` -> `http://127.0.0.1:8080/uploads/`
 
-## Security Notes
+## 安全说明
 
-- `.env` permissions are set to `0600`.
-- Generated secrets use `openssl rand` or `/dev/urandom`.
-- Existing Nginx config with the same name is backed up before replacement.
-- Existing deployments are not overwritten in non-interactive mode.
-- Uninstall keeps data by default; `--purge` requires two confirmations and typing the deployment path.
-- Runtime `config/config.yml` is written with `0600` permissions because it contains generated JWT, Redis, and PostgreSQL secrets.
-- Writable mode `0777` is limited to the official bind-mounted data directories (`data/db`, `data/uploads`, `data/logs`, `data/redis`, `data/postgres`) so containers with unknown runtime UIDs can write there. The installer does not recursively chmod existing files.
+- `.env` 权限为 `0600`。
+- `config/config.yml` 权限为 `0600`，因为其中包含 JWT、Redis 和 PostgreSQL 密钥。
+- 密钥和密码使用 `openssl rand` 或 `/dev/urandom` 生成。
+- 替换同名 Nginx 配置前会先备份。
+- 非交互安装不会覆盖已有部署。
+- 卸载默认保留数据；只有 `--purge` 才删除数据，并要求二次确认和输入完整路径。
+- `0777` 只用于官方要求的容器挂载数据目录：`data/db`、`data/uploads`、`data/logs`、`data/redis`、`data/postgres`，并且不会递归放大已有文件权限。
 
-## Backup
+## 备份
 
 ```bash
 sudo ./backup.sh
 sudo dujiao-next backup
 ```
 
-Backups go to `/opt/dujiao-next/backups` when writable, otherwise `/root/dujiao-next-backups`.
+备份默认写入 `/opt/dujiao-next/backups`；如果不可写，则写入 `/root/dujiao-next-backups`。
 
-Each backup includes `.env`, `config.yml`, `.deployment-profile`, existing Compose files, and `data/uploads` when present.
+备份内容包括 `.env`、`config.yml`、`.deployment-profile`、已有 Compose 文件，以及存在时的 `data/uploads`。
 
-The PostgreSQL profile also uses:
+PostgreSQL 方案还会执行：
 
 ```bash
 docker exec dujiaonext-postgres pg_dump -U ${POSTGRES_USER} -d ${POSTGRES_DB}
 ```
 
-## Upgrade
+## 升级
 
 ```bash
 sudo ./update.sh
@@ -193,18 +200,18 @@ sudo ./update.sh v1.2.3
 sudo dujiao-next upgrade v1.2.3
 ```
 
-Without a tag, the updater fetches the latest GitHub release and falls back to `latest`.
+未指定 TAG 时，升级脚本会获取 GitHub latest release，失败时回退到 `latest`。升级前会先备份。
 
-## Version Check
+## 版本检查
 
 ```bash
 ./check-updates.sh
 sudo dujiao-next check-updates
 ```
 
-The checker compares the deployed `TAG` with the latest GitHub release and prints the upgrade command when a newer tag is available.
+版本检查会比较当前部署的 `TAG` 和 GitHub latest release，并在发现新版本时打印升级命令。
 
-## Status And Logs
+## 状态与日志
 
 ```bash
 sudo ./status.sh
@@ -214,51 +221,52 @@ sudo dujiao-next check-updates
 sudo dujiao-next restore-help
 ```
 
-## Uninstall
+## 卸载
 
-Stop containers and keep data:
+停止容器并保留数据：
 
 ```bash
 sudo ./uninstall.sh
 ```
 
-Delete data after explicit confirmations:
+删除数据，需要明确确认：
 
 ```bash
 sudo ./uninstall.sh --purge
 ```
 
-## FAQ
+## 常见问题
 
-### Certbot failed
+### Certbot 失败
 
-Check that both domains resolve to the server. If you use Cloudflare, switch to DNS-only mode during certificate issuance.
+确认两个域名都解析到当前服务器。如果使用 Cloudflare，申请证书时建议切换为 DNS-only。
 
-### API health check failed
+### API 健康检查失败
 
-Run:
+执行：
 
 ```bash
 sudo dujiao-next status
 sudo dujiao-next logs api
 ```
 
-Then check `/opt/dujiao-next/config/config.yml` and `/opt/dujiao-next/.env`.
+然后检查 `/opt/dujiao-next/config/config.yml` 和 `/opt/dujiao-next/.env`。
 
-### I already have a deployment
+### 已有部署怎么办
 
-Interactive install offers upgrade, backup, or exit. Non-interactive install exits to avoid damaging existing data.
+交互安装会提供升级、备份或退出选项。非交互安装会直接退出，避免破坏已有数据。
 
-## Documentation
+## 文档
 
 - [Architecture](docs/architecture.md)
 - [Commands](docs/commands.md)
 - [Security](docs/security.md)
 - [Troubleshooting](docs/troubleshooting.md)
 
-## References
+## 参考
 
-- Official Dujiao-Next Docker Compose documentation: https://dujiao-next.com/deploy/docker-compose
-- Deployment record by luopojunzi: https://blog.luopojunzi.com/p/Dujiao-Next/
+- Dujiao-Next 官方 Docker Compose 文档： https://dujiao-next.com/deploy/docker-compose
+- luopojunzi 的部署记录： https://blog.luopojunzi.com/p/Dujiao-Next/
+- 功能参考，不复制、不 fork： https://github.com/slobys/dujiao-next-one-click
 
-This repository is an independent implementation and does not copy or fork `slobys/dujiao-next-one-click`.
+本仓库是独立实现，没有复制或 fork `slobys/dujiao-next-one-click`。
