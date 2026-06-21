@@ -18,7 +18,7 @@ Run as `root` or with `sudo`.
 ## Quick Start
 
 ```bash
-git clone https://github.com/<USER>/dujiao-next-deploy.git
+git clone https://github.com/LuoPoJunZi/dujiao-next-deploy.git
 cd dujiao-next-deploy
 sudo ./install.sh
 ```
