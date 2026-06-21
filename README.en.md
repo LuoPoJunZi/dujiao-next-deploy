@@ -1,12 +1,32 @@
+<div align="center">
+
 # dujiao-next-deploy
+
+**A safer one-command deployment toolkit for Dujiao-Next**
 
 English | [中文](README.md)
 
-`dujiao-next-deploy` is an unofficial Bash deployment toolkit for Dujiao-Next on Ubuntu/Debian servers.
+[![Shellcheck](https://github.com/LuoPoJunZi/dujiao-next-deploy/actions/workflows/shellcheck.yml/badge.svg)](https://github.com/LuoPoJunZi/dujiao-next-deploy/actions/workflows/shellcheck.yml)
+![Ubuntu 22.04+](https://img.shields.io/badge/Ubuntu-22.04%2B-E95420?logo=ubuntu&logoColor=white)
+![Debian 12+](https://img.shields.io/badge/Debian-12%2B-A81D33?logo=debian&logoColor=white)
+![Bash](https://img.shields.io/badge/Shell-Bash-4EAA25?logo=gnubash&logoColor=white)
 
-It installs Docker Engine, Docker Compose, Nginx, requests a Certbot HTTPS certificate, and deploys Dujiao-Next with a production PostgreSQL + Redis profile by default.
+</div>
+
+## Overview
+
+`dujiao-next-deploy` is an unofficial Bash deployment toolkit for Dujiao-Next on Ubuntu/Debian servers. It is designed for fresh public HTTPS deployments.
+
+The installer collects domains, email, deployment directory, and image tag first, then automatically installs Docker Engine, Docker Compose, Nginx and Certbot, generates configuration, and starts services. The default profile is PostgreSQL + Redis for production, with SQLite + Redis also supported.
 
 This project is not an official Dujiao-Next project. Dujiao-Next belongs to its original authors and maintainers.
+
+| Capability | Details |
+| --- | --- |
+| Automated setup | Installs Docker, Compose, Nginx and Certbot, then writes system configuration |
+| HTTPS certificates | Requests Certbot certificates and documents the Cloudflare/DNS-only flow |
+| Secure defaults | Redis/PostgreSQL are not published; app ports bind to `127.0.0.1` only |
+| Maintenance | Includes backup, update, status, version check, and data-preserving uninstall scripts |
 
 ## Supported Systems
 
@@ -273,6 +293,3 @@ Interactive install offers upgrade, backup, or exit. Non-interactive install exi
 ## References
 
 - Official Dujiao-Next Docker Compose documentation: https://dujiao-next.com/deploy/docker-compose
-- Deployment record by luopojunzi: https://blog.luopojunzi.com/p/Dujiao-Next/
-
-This repository is an independent implementation and does not copy or fork `slobys/dujiao-next-one-click`.

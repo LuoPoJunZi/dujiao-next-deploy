@@ -95,6 +95,9 @@ is_valid_tag() {
 
 tag_looks_like_domain() {
   local tag="$1"
+  local tld="${tag##*.}"
+  [[ "$tag" == *.* ]] || return 1
+  [[ "$tld" =~ [A-Za-z] ]] || return 1
   is_valid_domain "$tag"
 }
 

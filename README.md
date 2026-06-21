@@ -1,12 +1,32 @@
+<div align="center">
+
 # dujiao-next-deploy
+
+**Dujiao-Next 的安全一键部署脚本**
 
 中文 | [English](README.en.md)
 
-`dujiao-next-deploy` 是一个非官方的 Dujiao-Next Bash 一键部署工具，适用于 Ubuntu / Debian 服务器。
+[![Shellcheck](https://github.com/LuoPoJunZi/dujiao-next-deploy/actions/workflows/shellcheck.yml/badge.svg)](https://github.com/LuoPoJunZi/dujiao-next-deploy/actions/workflows/shellcheck.yml)
+![Ubuntu 22.04+](https://img.shields.io/badge/Ubuntu-22.04%2B-E95420?logo=ubuntu&logoColor=white)
+![Debian 12+](https://img.shields.io/badge/Debian-12%2B-A81D33?logo=debian&logoColor=white)
+![Bash](https://img.shields.io/badge/Shell-Bash-4EAA25?logo=gnubash&logoColor=white)
 
-它会安装 Docker Engine、Docker Compose、Nginx，并通过 Certbot 申请 HTTPS 证书；默认使用 PostgreSQL + Redis 生产方案部署 Dujiao-Next。
+</div>
+
+## 项目简介
+
+`dujiao-next-deploy` 是一个非官方的 Dujiao-Next Bash 部署工具，面向 Ubuntu / Debian 服务器，适合从零完成公网 HTTPS 部署。
+
+安装脚本会集中收集域名、邮箱、部署目录和镜像 TAG，然后自动安装 Docker Engine、Docker Compose、Nginx、Certbot，生成配置并启动服务。默认使用 PostgreSQL + Redis 生产方案，也支持 SQLite + Redis。
 
 本项目不是 Dujiao-Next 官方项目。Dujiao-Next 的版权归原项目作者和维护者所有。
+
+| 能力 | 说明 |
+| --- | --- |
+| 自动安装 | 安装 Docker、Compose、Nginx、Certbot，并生成系统配置 |
+| HTTPS 证书 | 支持自动申请 Certbot 证书，适配 Cloudflare/DNS-only 部署流程 |
+| 安全默认值 | Redis/PostgreSQL 不暴露端口，业务容器只绑定 `127.0.0.1` |
+| 数据维护 | 提供备份、升级、状态检查、版本检查和保留数据卸载 |
 
 ## 支持系统
 
