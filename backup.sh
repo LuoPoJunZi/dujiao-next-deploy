@@ -28,16 +28,18 @@ main() {
   [[ -d "$DEPLOY_DIR" ]] || die "部署目录不存在：$DEPLOY_DIR"
   [[ -f "$DEPLOY_DIR/.env" ]] || die "找不到 $DEPLOY_DIR/.env"
   load_env_file "$DEPLOY_DIR/.env"
-  : "${POSTGRES_USER:?缺少 POSTGRES_USER}"
-  : "${POSTGRES_DB:?缺少 POSTGRES_DB}"
   local backup_root backup_name tmp_dir profile compose_file compose_candidate
+  profile="$(cat "$DEPLOY_DIR/.deployment-profile" 2>/dev/null || printf '%s' postgres)"
+  if [[ "$profile" != "sqlite" ]]; then
+    : "${POSTGRES_USER:?缺少 POSTGRES_USER}"
+    : "${POSTGRES_DB:?缺少 POSTGRES_DB}"
+  fi
   if [[ -d "$DEPLOY_DIR/backups" && -w "$DEPLOY_DIR/backups" ]]; then
     backup_root="$DEPLOY_DIR/backups"
   else
     backup_root="/root/dujiao-next-backups"
     mkdir -p "$backup_root"
   fi
-  profile="$(cat "$DEPLOY_DIR/.deployment-profile" 2>/dev/null || printf '%s' postgres)"
   compose_file="$(compose_profile_file "$DEPLOY_DIR")"
   backup_name="dujiao-next-${profile}-$(timestamp)"
   tmp_dir="$(mktemp -d)"
@@ -74,6 +76,7 @@ main() {
   tar -C "$tmp_dir" -czf "$backup_root/${backup_name}.tar.gz" "$backup_name"
   chmod 0600 "$backup_root/${backup_name}.tar.gz"
   success "备份完成：$backup_root/${backup_name}.tar.gz"
+  warn "备份包含 .env、config.yml、上传文件和数据库内容，请按敏感数据保管。"
 }
 
 main "$@"

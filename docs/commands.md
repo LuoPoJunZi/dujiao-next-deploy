@@ -20,7 +20,9 @@ sudo ./install.sh \
   --https
 ```
 
-Skip HTTPS:
+Non-interactive installs must explicitly pass either `--https` or `--no-https`.
+
+Skip HTTPS for temporary private-network or debugging use only:
 
 ```bash
 sudo ./install.sh \

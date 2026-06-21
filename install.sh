@@ -73,8 +73,8 @@ prompt_if_needed() {
   if [[ "$ASSUME_YES" == "yes" ]]; then
     [[ -n "$USER_DOMAIN" ]] || die "非交互模式必须提供 --user-domain。"
     [[ -n "$ADMIN_DOMAIN" ]] || die "非交互模式必须提供 --admin-domain。"
+    [[ -n "$HTTPS_MODE" ]] || die "非交互模式必须明确提供 --https 或 --no-https；生产部署建议使用 --https。"
     [[ "$HTTPS_MODE" != "yes" || -n "$ADMIN_EMAIL" ]] || die "启用 --https 时必须提供 --email。"
-    HTTPS_MODE="${HTTPS_MODE:-no}"
     HANDLE_FIREWALL="${HANDLE_FIREWALL:-no}"
     REMOVE_OLD_DOCKER_PACKAGES="${REMOVE_OLD_DOCKER_PACKAGES:-yes}"
     return

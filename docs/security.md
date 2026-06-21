@@ -31,6 +31,9 @@ Generated values include:
 
 The `.env` file is written with `0600` permissions.
 The runtime `config/config.yml` file is also written with `0600` permissions because it contains generated JWT secrets and service credentials.
+Helper scripts parse `.env` as `KEY=VALUE` data and do not execute it as Bash.
+
+Backup archives contain `.env`, `config.yml`, uploaded files, and database content. They are written with `0600` permissions and should be handled as sensitive data.
 
 ## Existing Files
 

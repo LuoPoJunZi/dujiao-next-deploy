@@ -160,11 +160,18 @@ safe_mkdir_deploy_tree() {
 
 load_env_file() {
   local env_file="$1"
+  local line key value
   [[ -f "$env_file" ]] || die "找不到环境文件：$env_file"
-  set -a
-  # shellcheck disable=SC1090
-  . "$env_file"
-  set +a
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
+    [[ "$line" =~ ^[[:space:]]*$ || "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ "$line" == export\ * ]] && line="${line#export }"
+    [[ "$line" == *=* ]] || die "环境文件包含非法行：$env_file"
+    key="${line%%=*}"
+    value="${line#*=}"
+    [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || die "环境变量名不合法：$key"
+    export "$key=$value"
+  done <"$env_file"
 }
 
 escape_sed_replacement() {

@@ -124,6 +124,8 @@ The admin password is generated with `openssl rand` and printed once at the end 
 --yes
 ```
 
+Non-interactive mode must explicitly pass either `--https` or `--no-https`. Use `--https` for public production deployments; `--no-https` is only for temporary private-network or debugging use.
+
 ## Directory Structure
 
 Repository:
@@ -196,6 +198,7 @@ Admin domain:
 
 - `.env` permissions are set to `0600`.
 - Generated secrets use `openssl rand` or `/dev/urandom`.
+- Scripts parse `.env` as `KEY=VALUE` data and do not execute it as Bash.
 - Existing Nginx config with the same name is backed up before replacement.
 - Existing deployments are not overwritten in non-interactive mode.
 - Uninstall keeps data by default; `--purge` requires two confirmations and typing the deployment path.

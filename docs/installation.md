@@ -47,10 +47,12 @@ sudo ./install.sh \
 ```
 
 Use `--no-https` only for temporary private-network or debugging installs.
+Non-interactive mode must explicitly pass either `--https` or `--no-https`.
 
 ## Generated Credentials
 
 The installer writes generated values to `/opt/dujiao-next/.env`.
+Scripts parse `.env` as `KEY=VALUE` data and do not execute it as Bash.
 
 Important fields:
 

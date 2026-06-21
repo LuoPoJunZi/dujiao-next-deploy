@@ -128,6 +128,8 @@ sudo ./install.sh
 --yes
 ```
 
+非交互模式必须明确提供 `--https` 或 `--no-https`。生产公网部署建议使用 `--https`，`--no-https` 仅适合临时内网或调试。
+
 ## 目录结构
 
 仓库结构：
@@ -201,6 +203,7 @@ sudo ./install.sh
 - `.env` 权限为 `0600`。
 - `config/config.yml` 权限为 `0600`，因为其中包含 JWT、Redis 和 PostgreSQL 密钥。
 - 密钥和密码使用 `openssl rand` 或 `/dev/urandom` 生成。
+- 脚本只按 `KEY=VALUE` 解析 `.env`，不会把 `.env` 当作 Bash 脚本执行。
 - 替换同名 Nginx 配置前会先备份。
 - 非交互安装不会覆盖已有部署。
 - 卸载默认保留数据；只有 `--purge` 才删除数据，并要求二次确认和输入完整路径。
