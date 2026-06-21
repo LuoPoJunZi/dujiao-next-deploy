@@ -277,7 +277,3 @@ sudo dujiao-next logs api
 ## 参考
 
 - Dujiao-Next 官方 Docker Compose 文档： https://dujiao-next.com/deploy/docker-compose
-- luopojunzi 的部署记录： https://blog.luopojunzi.com/p/Dujiao-Next/
-- 功能参考，不复制、不 fork： https://github.com/slobys/dujiao-next-one-click
-
-本仓库是独立实现，没有复制或 fork `slobys/dujiao-next-one-click`。
