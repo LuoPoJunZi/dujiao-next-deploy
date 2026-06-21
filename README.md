@@ -4,7 +4,7 @@
 
 `dujiao-next-deploy` 是一个非官方的 Dujiao-Next Bash 一键部署工具，适用于 Ubuntu / Debian 服务器。
 
-它会安装 Docker Engine、Docker Compose、Nginx，并可选申请 Certbot HTTPS 证书；默认使用 PostgreSQL + Redis 生产方案部署 Dujiao-Next。
+它会安装 Docker Engine、Docker Compose、Nginx，并通过 Certbot 申请 HTTPS 证书；默认使用 PostgreSQL + Redis 生产方案部署 Dujiao-Next。
 
 本项目不是 Dujiao-Next 官方项目。Dujiao-Next 的版权归原项目作者和维护者所有。
 
@@ -14,6 +14,17 @@
 - Debian 12+
 
 请使用 `root` 或 `sudo` 运行安装、升级、备份和卸载脚本。
+
+## 部署前准备
+
+生产部署默认需要 HTTPS 证书。运行安装脚本前，请先到 Cloudflare（CF）或你的 DNS 服务商添加两条 A 记录：
+
+- 前台域名，例如 `shop.example.com` -> 当前服务器公网 IP
+- 后台域名，例如 `admin.example.com` -> 当前服务器公网 IP
+
+如果使用 Cloudflare 代理，申请证书阶段建议先切换为 DNS-only（灰云），等 Certbot 证书申请成功后再按需开启代理。
+
+安装脚本会先集中收集域名、邮箱、部署目录、镜像 TAG 等信息，然后自动安装 Docker、Nginx、Certbot，生成配置并启动服务。
 
 ## 快速开始
 
@@ -31,7 +42,7 @@ sudo dujiao-next
 
 ## 一行安装
 
-启用 HTTPS：
+生产部署（HTTPS）：
 
 ```bash
 sudo ./install.sh \
@@ -43,7 +54,7 @@ sudo ./install.sh \
   --https
 ```
 
-跳过 HTTPS：
+临时跳过 HTTPS（仅用于内网或调试）：
 
 ```bash
 sudo ./install.sh \
@@ -70,7 +81,7 @@ sudo ./install.sh
 - 镜像 TAG，默认 GitHub latest release，失败回退 `latest`
 - 部署目录，默认 `/opt/dujiao-next`
 - 部署方案 `postgres|sqlite`
-- 是否申请 HTTPS
+- 是否申请 HTTPS，生产部署建议启用
 - Certbot 邮箱
 - 是否处理主机防火墙规则
 - 是否移除旧 Docker 冲突包
@@ -239,7 +250,7 @@ sudo ./uninstall.sh --purge
 
 ### Certbot 失败
 
-确认两个域名都解析到当前服务器。如果使用 Cloudflare，申请证书时建议切换为 DNS-only。
+确认两个域名都已在 Cloudflare（CF）或 DNS 服务商添加 A 记录并解析到当前服务器公网 IP。如果使用 Cloudflare 代理，申请证书时建议切换为 DNS-only（灰云）。
 
 ### API 健康检查失败
 

@@ -1,5 +1,16 @@
 # Installation
 
+## DNS and HTTPS Prerequisites
+
+Production deployment is expected to use HTTPS. Before running the installer, create two A records in Cloudflare or your DNS provider:
+
+- Frontend domain, for example `shop.example.com` -> this server public IP
+- Admin domain, for example `admin.example.com` -> this server public IP
+
+If you use the Cloudflare proxy, switch the records to DNS-only mode while Certbot requests the certificate. After certificate issuance succeeds, you can enable the proxy again if needed.
+
+The installer first collects domains, email, deployment directory, image tag and other choices, then automatically installs Docker, Nginx and Certbot, writes configuration, starts containers, and performs health checks.
+
 ## Interactive Install
 
 ```bash
@@ -14,7 +25,7 @@ The installer asks for:
 - Deployment directory, default `/opt/dujiao-next`
 - Dujiao-Next image tag
 - Database profile
-- Whether to request HTTPS
+- Whether to request HTTPS, recommended for production
 - ACME email if HTTPS is enabled
 - Whether to handle host firewall rules
 - Whether to remove old Docker conflict packages
@@ -35,7 +46,7 @@ sudo ./install.sh \
   --https
 ```
 
-Use `--no-https` to skip Certbot.
+Use `--no-https` only for temporary private-network or debugging installs.
 
 ## Generated Credentials
 
@@ -52,6 +63,4 @@ The default admin account is only used during the first API initialization. Log 
 
 ## DNS
 
-Before enabling HTTPS, point both domains to the server.
-
-If you use a proxy CDN, use DNS-only mode until Certbot succeeds.
+Before enabling HTTPS, point both domains to the server public IP. If you use Cloudflare or another proxy CDN, use DNS-only mode until Certbot succeeds.

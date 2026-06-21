@@ -4,7 +4,7 @@ English | [中文](README.md)
 
 `dujiao-next-deploy` is an unofficial Bash deployment toolkit for Dujiao-Next on Ubuntu/Debian servers.
 
-It installs Docker Engine, Docker Compose, Nginx and optional Certbot HTTPS, then deploys Dujiao-Next with a production PostgreSQL + Redis profile by default.
+It installs Docker Engine, Docker Compose, Nginx, requests a Certbot HTTPS certificate, and deploys Dujiao-Next with a production PostgreSQL + Redis profile by default.
 
 This project is not an official Dujiao-Next project. Dujiao-Next belongs to its original authors and maintainers.
 
@@ -14,6 +14,17 @@ This project is not an official Dujiao-Next project. Dujiao-Next belongs to its 
 - Debian 12+
 
 Run as `root` or with `sudo`.
+
+## Before You Start
+
+Production deployment is expected to use HTTPS. Before running the installer, create two A records in Cloudflare or your DNS provider:
+
+- Frontend domain, for example `shop.example.com` -> this server public IP
+- Admin domain, for example `admin.example.com` -> this server public IP
+
+If you use the Cloudflare proxy, switch the records to DNS-only mode during Certbot issuance. After the certificate succeeds, you can enable the proxy if your setup needs it.
+
+The installer first collects domains, email, deployment directory, image tag and other choices, then automatically installs Docker, Nginx and Certbot, generates configuration, and starts services.
 
 ## Quick Start
 
@@ -41,7 +52,7 @@ sudo ./install.sh \
   --https
 ```
 
-Skip HTTPS:
+Temporarily skip HTTPS, for private-network or debugging use only:
 
 ```bash
 sudo ./install.sh \
@@ -66,7 +77,7 @@ The installer asks for:
 - Image tag, default GitHub latest release; fallback `latest`
 - Deployment directory, default `/opt/dujiao-next`
 - Deployment profile `postgres|sqlite`
-- Whether to request HTTPS
+- Whether to request HTTPS, recommended for production
 - Certbot email
 - Whether to handle host firewall rules
 - Whether to remove old Docker conflict packages
@@ -235,7 +246,7 @@ sudo ./uninstall.sh --purge
 
 ### Certbot failed
 
-Check that both domains resolve to the server. If you use Cloudflare, switch to DNS-only mode during certificate issuance.
+Check that both domains have A records in Cloudflare or your DNS provider and resolve to the server public IP. If you use the Cloudflare proxy, switch to DNS-only mode during certificate issuance.
 
 ### API health check failed
 

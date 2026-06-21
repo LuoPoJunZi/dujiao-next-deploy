@@ -31,14 +31,22 @@ Options:
   --tag TAG                  Dujiao-Next image tag, default: GitHub latest release or latest
   --deploy-dir DIR           Deployment directory, default: /opt/dujiao-next
   --profile postgres|sqlite  Deployment profile, default: postgres
-  --https                    Request HTTPS certificate
-  --no-https                 Skip HTTPS certificate
+  --https                    Request HTTPS certificate, recommended for production
+  --no-https                 Skip HTTPS certificate, only for temporary testing
   --firewall yes|no          Allow 22/80/443 with supported host firewalls
   --remove-old-docker yes|no Remove installed Docker conflict packages, default: yes
   --renew-check              Run certbot renew --dry-run after issuance
   --yes                      Non-interactive mode
   -h, --help                 Show help
 EOF
+}
+
+print_deployment_notice() {
+  log "部署前准备："
+  log "  1. 请先在 Cloudflare（CF）或 DNS 服务商添加前台域名和后台域名的 A 记录，指向当前服务器公网 IP。"
+  log "  2. 如果使用 Cloudflare 代理，申请证书阶段建议先切换为灰云/仅 DNS，证书成功后再按需开启代理。"
+  log "  3. 安装脚本会先集中收集域名、邮箱、部署目录等信息，然后自动安装 Docker、Nginx、Certbot 并完成部署。"
+  log ""
 }
 
 while (($# > 0)); do
@@ -87,7 +95,7 @@ prompt_if_needed() {
   read -r -p "部署方案 postgres/sqlite [${PROFILE}]: " input_profile
   PROFILE="${input_profile:-$PROFILE}"
   if [[ -z "$HTTPS_MODE" ]]; then
-    if confirm "是否申请 HTTPS 证书？" "yes"; then
+    if confirm "是否申请 HTTPS 证书？生产公网部署建议选择 yes。" "yes"; then
       HTTPS_MODE="yes"
     else
       HTTPS_MODE="no"
@@ -480,7 +488,7 @@ handle_firewall() {
 }
 
 request_https() {
-  [[ "$HTTPS_MODE" == "yes" ]] || { warn "已跳过 HTTPS 证书申请。"; return; }
+  [[ "$HTTPS_MODE" == "yes" ]] || { warn "已跳过 HTTPS 证书申请，仅适合临时测试或内网调试。"; return; }
   certbot --nginx \
     -d "$USER_DOMAIN" \
     -d "$ADMIN_DOMAIN" \
@@ -515,6 +523,7 @@ install_cli_runtime() {
 }
 
 main() {
+  print_deployment_notice
   prompt_if_needed
   validate_inputs
   [[ -n "$IMAGE_TAG" ]] || IMAGE_TAG="$(get_latest_tag)"
